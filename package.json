@@ -1,0 +1,27 @@
+{
+  "name": "edgevantage-p2-onboarding",
+  "version": "1.0.0",
+  "description": "Automated P2 onboarding system for EdgeVantage",
+  "main": "server/dist/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm run dev",
+    "build": "npm run server:build && npm run client:build",
+    "server:build": "cd server && npm run build",
+    "client:build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "setup": "npm install && cd server && npm install && cd ../client && npm install && cd ../api && npm install",
+    "db:push": "cd server && npx prisma db push",
+    "db:studio": "cd server && npx prisma studio",
+    "db:generate": "cd server && npx prisma generate",
+    "vercel-build": "cd server && npm run build",
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["automation", "onboarding", "sweepstakes", "verification"],
+  "author": "EdgeVantage",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

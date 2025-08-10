@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model P2Client {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String   @unique
+  phone         String
+  dateOfBirth   DateTime
+  address       String
+  city          String
+  state         String
+  zipCode       String
+  country       String   @default("US")
+  
+  // Encrypted fields for security
+  encryptedSSN  String?
+  
+  // Status tracking
+  status        P2Status @default(ACTIVE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  accounts      P2Account[]
+  verifications IdentityVerification[]
+  
+  @@map("p2_clients")
+}
+
+model Website {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  url             String
+  category        String
+  isActive        Boolean  @default(true)
+  
+  // Configuration for automation
+  config          Json     // Stores selectors, flows, etc.
+  
+  // Success/failure tracking
+  totalAttempts   Int      @default(0)
+  successfulRegs  Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  accounts        P2Account[]
+  
+  @@map("websites")
+}
+
+model P2Account {
+  id               String              @id @default(cuid())
+  p2ClientId       String
+  websiteId        String
+  
+  // Account details
+  username         String?
+  accountEmail     String?
+  
+  // Registration tracking
+  registrationStep RegistrationStep    @default(PENDING)
+  status           AccountStatus       @default(PENDING)
+  
+  // Verification tracking
+  emailVerified    Boolean             @default(false)
+  phoneVerified    Boolean             @default(false)
+  identityVerified Boolean             @default(false)
+  
+  // Timestamps
+  registrationStarted DateTime?
+  registrationCompleted DateTime?
+  lastAttempt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  
+  // Error tracking
+  errorLog         Json?
+  retryCount       Int              @default(0)
+  maxRetries       Int              @default(3)
+  
+  // Relations
+  p2Client         P2Client         @relation(fields: [p2ClientId], references: [id])
+  website          Website          @relation(fields: [websiteId], references: [id])
+  logs             AccountLog[]
+  
+  @@unique([p2ClientId, websiteId])
+  @@map("p2_accounts")
+}
+
+model AccountLog {
+  id          String    @id @default(cuid())
+  accountId   String
+  step        String
+  status      LogStatus
+  message     String
+  details     Json?
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  account     P2Account @relation(fields: [accountId], references: [id])
+  
+  @@map("account_logs")
+}
+
+model IdentityVerification {
+  id                String                    @id @default(cuid())
+  p2ClientId        String
+  verificationCode  String                    @unique
+  qrCodeUrl         String?
+  
+  status            IdentityVerificationStatus @default(PENDING)
+  verificationUrl   String?
+  
+  // P2 interaction tracking
+  linkSent          Boolean                   @default(false)
+  linkSentAt        DateTime?
+  accessed          Boolean                   @default(false)
+  accessedAt        DateTime?
+  completed         Boolean                   @default(false)
+  completedAt       DateTime?
+  
+  // Document details (encrypted)
+  documentType      String?
+  documentNumber    String?
+  
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  expiresAt         DateTime
+  
+  // Relations
+  p2Client          P2Client                  @relation(fields: [p2ClientId], references: [id])
+  
+  @@map("identity_verifications")
+}
+
+model EmailTemplate {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  type        EmailTemplateType
+  subject     String
+  htmlContent String
+  textContent String
+  variables   Json              // Available template variables
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  @@map("email_templates")
+}
+
+model SMSTemplate {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  type        SMSTemplateType
+  content     String
+  variables   Json           // Available template variables
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  @@map("sms_templates")
+}
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_config")
+}
+
+// Enums
+enum P2Status {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum RegistrationStep {
+  PENDING
+  FORM_FILLING
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  IDENTITY_VERIFICATION
+  COMPLETED
+  FAILED
+}
+
+enum AccountStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  REQUIRES_MANUAL
+}
+
+enum LogStatus {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum IdentityVerificationStatus {
+  PENDING
+  SENT
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+enum EmailTemplateType {
+  WELCOME
+  VERIFICATION_REQUEST
+  VERIFICATION_REMINDER
+  COMPLETION_NOTIFICATION
+  ERROR_NOTIFICATION
+}
+
+enum SMSTemplateType {
+  VERIFICATION_CODE
+  VERIFICATION_REQUEST
+  COMPLETION_NOTIFICATION
+}
