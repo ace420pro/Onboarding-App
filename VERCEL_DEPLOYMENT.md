@@ -45,21 +45,23 @@ git branch -M main
 git push -u origin main
 ```
 
-## Step 2: Set Up Database (Neon PostgreSQL)
+## Step 2: Set Up Database (MongoDB Atlas)
 
-### 2.1 Create Neon Account
-1. Go to https://neon.tech
-2. Sign up with GitHub (recommended)
+### 2.1 Create MongoDB Atlas Account
+1. Go to https://cloud.mongodb.com
+2. Sign up with Google/GitHub (recommended)
 3. Create a new project named "EdgeVantage Onboarding"
+4. Create a cluster (choose free M0 tier)
 
 ### 2.2 Get Database URL
-1. In your Neon dashboard, go to "Dashboard"
-2. Click "Connection Details"
-3. Copy the "Connection String" - it looks like:
+1. In your MongoDB Atlas dashboard, click "Connect"
+2. Choose "Connect your application"
+3. Copy the connection string - it looks like:
    ```
-   postgresql://username:password@host/database?sslmode=require
+   mongodb+srv://username:password@cluster.mongodb.net/edgevantage_onboarding?retryWrites=true&w=majority
    ```
-4. Save this URL - you'll need it for Vercel environment variables
+4. Replace `<password>` with your actual database password
+5. Save this URL - you'll need it for Vercel environment variables
 
 ## Step 3: Deploy Frontend to Vercel
 
@@ -102,7 +104,7 @@ VITE_API_URL=https://your-api-domain.vercel.app/api
 In your API project → Settings → Environment Variables:
 
 ```bash
-DATABASE_URL=postgresql://your-neon-connection-string
+DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/edgevantage_onboarding?retryWrites=true&w=majority
 NODE_ENV=production
 JWT_SECRET=your-64-character-random-string
 ENCRYPTION_KEY=your-32-character-random-string
@@ -200,9 +202,9 @@ If you have a custom domain:
 
 ### Issue: Database Connection Errors
 **Solution**:
-- Verify Neon database is running
-- Check connection string format
-- Ensure IP restrictions are disabled in Neon
+- Verify MongoDB Atlas cluster is running
+- Check connection string format and password
+- Ensure IP allowlist includes 0.0.0.0/0 (allow from anywhere) in Atlas
 
 ### Issue: CORS Errors
 **Solution**:

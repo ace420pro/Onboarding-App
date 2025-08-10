@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model P2Client {
-  id            String   @id @default(cuid())
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
   firstName     String
   lastName      String
   email         String   @unique
@@ -36,7 +36,7 @@ model P2Client {
 }
 
 model Website {
-  id              String   @id @default(cuid())
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
   name            String   @unique
   url             String
   category        String
@@ -59,9 +59,9 @@ model Website {
 }
 
 model P2Account {
-  id               String              @id @default(cuid())
-  p2ClientId       String
-  websiteId        String
+  id               String              @id @default(auto()) @map("_id") @db.ObjectId
+  p2ClientId       String              @db.ObjectId
+  websiteId        String              @db.ObjectId
   
   // Account details
   username         String?
@@ -93,13 +93,12 @@ model P2Account {
   website          Website          @relation(fields: [websiteId], references: [id])
   logs             AccountLog[]
   
-  @@unique([p2ClientId, websiteId])
   @@map("p2_accounts")
 }
 
 model AccountLog {
-  id          String    @id @default(cuid())
-  accountId   String
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  accountId   String    @db.ObjectId
   step        String
   status      LogStatus
   message     String
@@ -113,8 +112,8 @@ model AccountLog {
 }
 
 model IdentityVerification {
-  id                String                    @id @default(cuid())
-  p2ClientId        String
+  id                String                    @id @default(auto()) @map("_id") @db.ObjectId
+  p2ClientId        String                    @db.ObjectId
   verificationCode  String                    @unique
   qrCodeUrl         String?
   
@@ -144,7 +143,7 @@ model IdentityVerification {
 }
 
 model EmailTemplate {
-  id          String            @id @default(cuid())
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
   name        String            @unique
   type        EmailTemplateType
   subject     String
@@ -159,7 +158,7 @@ model EmailTemplate {
 }
 
 model SMSTemplate {
-  id          String         @id @default(cuid())
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
   name        String         @unique
   type        SMSTemplateType
   content     String
@@ -172,7 +171,7 @@ model SMSTemplate {
 }
 
 model SystemConfig {
-  id          String   @id @default(cuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   key         String   @unique
   value       Json
   description String?
